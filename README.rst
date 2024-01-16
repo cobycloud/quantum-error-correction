@@ -1,7 +1,7 @@
-SurfaceCodeQubit
+✨ SurfaceCodeQubit: Surface Code Simulation
 ================
 
-✨ The `SurfaceCodeQubit` class represents a logical qubit in a surface code quantum error correction scheme. It supports various gate operations, error correction, and measurement functionalities.
+The `SurfaceCodeQubit` class represents a logical qubit in a surface code quantum error correction scheme. It supports various gate operations, error correction, and measurement functionalities.
 
 Initialization
 --------------
