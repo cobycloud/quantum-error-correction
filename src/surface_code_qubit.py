@@ -19,7 +19,7 @@ class SurfaceCodeQubit:
         elif gate_type == 'CNOT':
             self._apply_cnot_gate(target_qubits)
         elif gate_type == 'RX':
-            self._apply_rx_gate(target_qubits, angle)a
+            self._apply_rx_gate(target_qubits, angle)
         elif gate_type == 'RY':
             self._apply_ry_gate(target_qubits, angle)
         elif gate_type == 'RZ':
