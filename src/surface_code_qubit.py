@@ -289,7 +289,7 @@ class SurfaceCodeQubit:
     def measure(self, target_qubit):
         # Measure the state of a specific qubit
         # Returns 0 or 1 based on the measurement result
-        probabilities = np.abs(self.logical_qubits[target_qubit])**2
+        probabilities = np.abs(self.logical_qubits[target_qubit[0], target_qubit[1]])**2
         result = np.random.choice([0, 1], p=probabilities)
         return result
 
