@@ -6,80 +6,126 @@ class SurfaceCodeQubit:
     def __init__(self, size):
         self.size = size
         self.graph = nx.grid_2d_graph(size, size)
-        self.logical_qubits = np.full((size, size, 2, 2), [[1e-10j, 1e-10j], [1e-10j, 1e-10j]], dtype=complex)
+        self.logical_qubits = np.full((size, size, 2, 2, 2), 
+                                      [[[1e-10j, 1e-10j], [1e-10j, 1e-10j]], 
+                                       [[1e-10j, 1e-10j], [1e-10j, 1e-10j]]], dtype=complex)
 
     def apply_gate(self, gate_type, target_qubits, angle=None):
         # Apply a gate to the qubits based on gate type
+        if len(target_qubits) == 2:  # Two-qubit gate
+            self._apply_two_qubit_gate(gate_type, target_qubits, angle)
+        else:  # Single qubit gate
+            self._apply_single_qubit_gate(gate_type, target_qubits, angle)
+
+    def _apply_single_qubit_gate(self, gate_type, target_qubit, angle=None):
+        # Apply a single qubit gate to the target qubit
+        row, col, _, _, qubit_index = target_qubit
+        target_qubit_state = self.logical_qubits[row, col, :, :, qubit_index]
+
         if gate_type == 'X':
-            self._apply_x_gate(target_qubits)
+            self._apply_x_gate(target_qubit_state)
         elif gate_type == 'Z':
-            self._apply_z_gate(target_qubits)
+            self._apply_z_gate(target_qubit_state)
         elif gate_type == 'H':
-            self._apply_hadamard_gate(target_qubits)
-        elif gate_type == 'CNOT':
-            self._apply_cnot_gate(target_qubits)
+            self._apply_hadamard_gate(target_qubit_state)
         elif gate_type == 'RX':
-            self._apply_rx_gate(target_qubits, angle)
+            self._apply_rx_gate(target_qubit_state, angle)
         elif gate_type == 'RY':
-            self._apply_ry_gate(target_qubits, angle)
+            self._apply_ry_gate(target_qubit_state, angle)
         elif gate_type == 'RZ':
-            self._apply_rz_gate(target_qubits, angle)
+            self._apply_rz_gate(target_qubit_state, angle)
         elif gate_type == 'CPHASE':
-            self._apply_cphase_gate(target_qubits, angle)
+            self._apply_cphase_gate(target_qubit_state, angle)
 
-    def _apply_x_gate(self, target_qubits):
-        # Apply X gate to the target qubits
-        target_row, target_col = target_qubits
+        # Update the state of the target qubit
+        self.logical_qubits[row, col, :, :, qubit_index] = target_qubit_state
+
+    def _apply_two_qubit_gate(self, gate_type, target_qubits, angle=None):
+        # Apply a two-qubit gate to the target qubits
+        control_row, control_col, _, _, control_index = target_qubits[0]
+        target_row, target_col, _, _, target_index = target_qubits[1]
+
+        control_qubit_state = self.logical_qubits[control_row, control_col, :, :, control_index]
+        target_qubit_state = self.logical_qubits[target_row, target_col, :, :, target_index]
+
+        if gate_type == 'CNOT':
+            self._apply_cnot_gate(control_qubit_state, target_qubit_state)
+        elif gate_type == 'CPHASE':
+            self._apply_cphase_gate(control_qubit_state, target_qubit_state, angle)
+
+        # Update the states of the target qubits
+        self.logical_qubits[control_row, control_col, :, :, control_index] = control_qubit_state
+        self.logical_qubits[target_row, target_col, :, :, target_index] = target_qubit_state
+
+    def _apply_x_gate(self, target_qubit_state):
+        # Apply X gate to the target qubit state
         x_gate_matrix = np.array([[0, 1], [1, 0]])
-        self.logical_qubits[target_row, target_col] = np.dot(x_gate_matrix, self.logical_qubits[target_row, target_col])
+        target_qubit_state = np.dot(x_gate_matrix, target_qubit_state)
 
-    def _apply_z_gate(self, target_qubits):
-        # Apply Z gate to the target qubits
-        target_row, target_col = target_qubits
+    def _apply_z_gate(self, target_qubit_state):
+        # Apply Z gate to the target qubit state
         z_gate_matrix = np.array([[1, 0], [0, -1]])
-        self.logical_qubits[target_row, target_col] = np.dot(z_gate_matrix, self.logical_qubits[target_row, target_col])
+        target_qubit_state = np.dot(z_gate_matrix, target_qubit_state)
 
-    def _apply_hadamard_gate(self, target_qubits):
-        # Apply Hadamard gate to the target qubits
-        target_row, target_col = target_qubits
+    def _apply_hadamard_gate(self, target_qubit_state):
+        # Apply Hadamard gate to the target qubit state
         hadamard_matrix = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
-        self.logical_qubits[target_row, target_col] = np.dot(hadamard_matrix, self.logical_qubits[target_row, target_col])
+        target_qubit_state = np.dot(hadamard_matrix, target_qubit_state)
 
-    def _apply_cnot_gate(self, target_qubits):
+    def _apply_cnot_gate(self, control_qubit_state, target_qubit_state):
         # Apply CNOT gate to the target qubits
-        control_qubit, target_qubit = target_qubits
-        control_row, control_col = control_qubit
-        target_row, target_col = target_qubit
         cnot_matrix = np.zeros((4, 4), dtype=complex)
         cnot_matrix[0, 0] = cnot_matrix[1, 1] = cnot_matrix[2, 3] = cnot_matrix[3, 2] = 1
-        self.logical_qubits[control_row, control_col] = np.dot(cnot_matrix, self.logical_qubits[control_row, control_col])
 
-    def _apply_rx_gate(self, target_qubits, angle):
-        # Apply RX gate to the target qubits
-        target_row, target_col = target_qubits
-        rx_gate_matrix = expm(-1j * angle / 2 * np.array([[0, 1], [1, 0]]))
-        self.logical_qubits[target_row, target_col] = np.dot(rx_gate_matrix, self.logical_qubits[target_row, target_col])
+        control_qubit_state = np.dot(cnot_matrix, control_qubit_state)
+        # Apply X gate to the target qubit state
+        x_gate_matrix = np.array([[0, 1], [1, 0]])
+        target_qubit_state = np.dot(x_gate_matrix, target_qubit_state)
 
-    def _apply_ry_gate(self, target_qubits, angle):
-        # Apply RY gate to the target qubits
-        target_row, target_col = target_qubits
-        ry_gate_matrix = expm(-1j * angle / 2 * np.array([[0, -1], [1, 0]]))
-        self.logical_qubits[target_row, target_col] = np.dot(ry_gate_matrix, self.logical_qubits[target_row, target_col])
-
-    def _apply_rz_gate(self, target_qubits, angle):
-        # Apply RZ gate to the target qubits
-        target_row, target_col = target_qubits
-        rz_gate_matrix = expm(-1j * angle / 2 * np.array([[1, 0], [0, -1]]))
-        self.logical_qubits[target_row, target_col] = np.dot(rz_gate_matrix, self.logical_qubits[target_row, target_col])
-        
-    def _apply_cphase_gate(self, target_qubits, angle):
+    def _apply_cphase_gate(self, control_qubit_state, target_qubit_state, angle):
         # Apply CPHASE gate to the target qubits
-        control_qubit, target_qubit = target_qubits
-        control_row, control_col = control_qubit
-        target_row, target_col = target_qubit
         cphase_matrix = expm(-1j * angle / 2 * np.array([[1, 0], [0, -1]]))
-        self.logical_qubits[control_row, control_col] = np.dot(cphase_matrix, self.logical_qubits[control_row, control_col])
 
+        control_qubit_state = np.dot(cphase_matrix, control_qubit_state)
+
+    def _apply_rx_gate(self, target_qubit_state, angle):
+        # Apply RX gate to the target qubit state
+        rx_gate_matrix = expm(-1j * angle / 2 * np.array([[0, 1], [1, 0]]))
+        target_qubit_state = np.dot(rx_gate_matrix, target_qubit_state)
+
+    def _apply_ry_gate(self, target_qubit_state, angle):
+        # Apply RY gate to the target qubit state
+        ry_gate_matrix = expm(-1j * angle / 2 * np.array([[0, -1], [1, 0]]))
+        target_qubit_state = np.dot(ry_gate_matrix, target_qubit_state)
+
+    def _apply_rz_gate(self, target_qubit_state, angle):
+        # Apply RZ gate to the target qubit state
+        rz_gate_matrix = expm(-1j * angle / 2 * np.array([[1, 0], [0, -1]]))
+        target_qubit_state = np.dot(rz_gate_matrix, target_qubit_state)
+
+
+
+    def _compute_stabilizer_value(self, row, col):
+        # Compute stabilizer value for a given qubit
+        neighbors = list(self.graph.neighbors((row, col)))
+        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
+        return stabilizer_value
+
+
+    def _compute_stabilizer_value(self, row, col):
+        # Compute stabilizer value for a given qubit
+        neighbors = list(self.graph.neighbors((row, col)))
+        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
+        return stabilizer_value
+
+
+    def _compute_cphase_stabilizer_value(self, row, col):
+        # Compute CPHASE stabilizer value for a given qubit
+        neighbors = list(self.graph.neighbors((row, col)))
+        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
+        return stabilizer_value
+
+    # Inside measure_cphase_stabilizers function
     def measure_cphase_stabilizers(self):
         # Measure CPHASE stabilizers and return the syndromes
         syndromes = np.zeros((self.size, self.size), dtype=int)
@@ -88,15 +134,10 @@ class SurfaceCodeQubit:
             stabilizer_value = self._compute_cphase_stabilizer_value(row, col)
             error = self._measure_stabilizer(stabilizer_value)
             syndromes[row, col] = error
-
-        return syndromes
-
-    def _compute_cphase_stabilizer_value(self, row, col):
-        # Compute CPHASE stabilizer value for a given qubit
-        neighbors = list(self.graph.neighbors((row, col)))
-        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
-        return stabilizer_value
     
+        return syndromes
+    
+    # Inside measure_rx_stabilizers function
     def measure_rx_stabilizers(self):
         # Measure RX stabilizers and return the syndromes
         syndromes = np.zeros((self.size, self.size), dtype=int)
@@ -105,9 +146,10 @@ class SurfaceCodeQubit:
             stabilizer_value = self._compute_rx_stabilizer_value(row, col)
             error = self._measure_stabilizer(stabilizer_value)
             syndromes[row, col] = error
-
+    
         return syndromes
-
+    
+    # Inside measure_ry_stabilizers function
     def measure_ry_stabilizers(self):
         # Measure RY stabilizers and return the syndromes
         syndromes = np.zeros((self.size, self.size), dtype=int)
@@ -116,9 +158,10 @@ class SurfaceCodeQubit:
             stabilizer_value = self._compute_ry_stabilizer_value(row, col)
             error = self._measure_stabilizer(stabilizer_value)
             syndromes[row, col] = error
-
+    
         return syndromes
-
+    
+    # Inside measure_rz_stabilizers function
     def measure_rz_stabilizers(self):
         # Measure RZ stabilizers and return the syndromes
         syndromes = np.zeros((self.size, self.size), dtype=int)
@@ -127,33 +170,10 @@ class SurfaceCodeQubit:
             stabilizer_value = self._compute_rz_stabilizer_value(row, col)
             error = self._measure_stabilizer(stabilizer_value)
             syndromes[row, col] = error
-
-        return syndromes
-
-    def _compute_rx_stabilizer_value(self, row, col):
-        # Compute RX stabilizer value for a given qubit
-        neighbors = list(self.graph.neighbors((row, col)))
-        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
-        return stabilizer_value
-
-    def _compute_ry_stabilizer_value(self, row, col):
-        # Compute RY stabilizer value for a given qubit
-        neighbors = list(self.graph.neighbors((row, col)))
-        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
-        return stabilizer_value
-
-    def _compute_rz_stabilizer_value(self, row, col):
-        # Compute RZ stabilizer value for a given qubit
-        neighbors = list(self.graph.neighbors((row, col)))
-        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
-        return stabilizer_value
-        
-    def _compute_hadamard_stabilizer_value(self, row, col):
-        # Compute Hadamard stabilizer value for a given qubit
-        neighbors = list(self.graph.neighbors((row, col)))
-        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
-        return stabilizer_value
     
+        return syndromes
+    
+    # Inside measure_hadamard_stabilizers function
     def measure_hadamard_stabilizers(self):
         # Measure Hadamard stabilizers and return the syndromes
         syndromes = np.zeros((self.size, self.size), dtype=int)
@@ -162,76 +182,14 @@ class SurfaceCodeQubit:
             stabilizer_value = self._compute_hadamard_stabilizer_value(row, col)
             error = self._measure_stabilizer(stabilizer_value)
             syndromes[row, col] = error
-
-        return syndromes
     
-    def measure_stabilizers(self):
-        # Measure stabilizers and return the syndromes
-        syndromes = np.zeros((self.size, self.size), dtype=int)
-        for node in self.graph.nodes:
-            row, col = node
-            stabilizer_value = self._compute_stabilizer_value(row, col)
-            error = self._measure_stabilizer(stabilizer_value)
-            syndromes[row, col] = error
-
         return syndromes
-
-    def _compute_stabilizer_value(self, row, col):
-        # Compute stabilizer value for a given qubit
-        neighbors = list(self.graph.neighbors((row, col)))
-        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
-        return stabilizer_value
 
     def _measure_stabilizer(self, stabilizer_value):
         # Measure stabilizer value and return 1 if an error is detected, 0 otherwise
         probability = np.abs(stabilizer_value)**2
         result = np.random.choice([0, 1], p=[1 - probability, probability])
         return result
-
-    def _correct_error(self, syndromes):
-        # Enhanced error correction: Apply more sophisticated error correction techniques
-        # Here, we use syndromes to identify and correct errors
-        for node in self.graph.nodes:
-            row, col = node
-            self._apply_correction(row, col, syndromes)
-
-
-
-    
-    def _apply_correction(self, row, col, syndromes):
-        # Apply a correction strategy based on detected syndromes
-        error_type = self._detect_error_type(syndromes, row, col)
-        if error_type == 'X':
-            self._apply_x_correction(row, col)
-        elif error_type == 'Z':
-            self._apply_z_correction(row, col)
-        elif error_type == 'H':
-            self._apply_hadamard_correction(row, col)
-        elif error_type == 'CPHASE':
-            self._apply_cphase_correction(row, col)
-        elif error_type == 'Phase':
-            self._apply_phase_correction(row, col)
-
-    def _detect_error_type(self, syndromes, row, col):
-        # Implement logic to analyze syndromes and determine error type
-        # Return the identified error type (e.g., 'X', 'Z', 'H', 'Phase', ...)
-        if syndromes[row, col] == 1:
-            # Check additional conditions to identify the error type
-            x_stabilizer_value = self._compute_rx_stabilizer_value(row, col)
-            z_stabilizer_value = self._compute_rz_stabilizer_value(row, col)
-
-            # Determine error type based on stabilizer values
-            if x_stabilizer_value == 1 and z_stabilizer_value == -1:
-                return 'X'
-            elif x_stabilizer_value == -1 and z_stabilizer_value == 1:
-                return 'Z'
-            elif x_stabilizer_value == 1 and z_stabilizer_value == 1:
-                return 'H'
-            else:
-                return 'Phase'
-        else:
-            return None
-
 
     def _detect_error_type(self, syndromes, row, col):
         # Implement logic to analyze syndromes and determine error type
@@ -273,45 +231,90 @@ class SurfaceCodeQubit:
                 return 'NoError'
         else:
             return None
+
+    # Inside _apply_correction_to_all_qubits function
+    def _apply_correction_to_all_qubits(self, syndromes):
+        # Iterate through every logical qubit
+        for row in range(self.size):
+            for col in range(self.size):
+                # Iterate through every qubit within the logical qubit
+                for qubit_row in range(self.logical_qubits.shape[2]):
+                    for qubit_col in range(self.logical_qubits.shape[3]):
+                        # Execute _apply_correction for each qubit
+                        self._apply_correction(row, col, qubit_row, qubit_col, syndromes)
     
-    def _apply_x_correction(self, row, col):
+    # Inside _apply_correction function
+    def _apply_correction(self, row, col, qubit_row, qubit_col, syndromes):
+        # Apply a correction strategy based on detected syndromes
+        error_type = self._detect_error_type(syndromes, row, col)
+        # Pass all parameters to correction functions
+        self._apply_x_correction(row, col, qubit_row, qubit_col)
+        self._apply_z_correction(row, col, qubit_row, qubit_col)
+        self._apply_hadamard_correction(row, col, qubit_row, qubit_col)
+        self._apply_cphase_correction(row, col, qubit_row, qubit_col)
+        self._apply_phase_correction(row, col, qubit_row, qubit_col)
+    
+    # Inside _apply_x_correction function
+    def _apply_x_correction(self, row, col, qubit_row, qubit_col):
         # Apply X correction to the qubit at (row, col)
         gate_matrix = np.array([[0, 1], [1, 0]])
-        self.logical_qubits[row, col] = np.dot(gate_matrix, self.logical_qubits[row, col])
-
-    def _apply_z_correction(self, row, col):
+        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
+            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+        )
+    
+    # Inside _apply_z_correction function
+    def _apply_z_correction(self, row, col, qubit_row, qubit_col):
         # Apply Z correction to the qubit at (row, col)
         gate_matrix = np.array([[1, 0], [0, -1]])
-        self.logical_qubits[row, col] = np.dot(gate_matrix, self.logical_qubits[row, col])
-
-    def _apply_hadamard_correction(self, row, col):
+        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
+            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+        )
+    
+    # Inside _apply_hadamard_correction function
+    def _apply_hadamard_correction(self, row, col, qubit_row, qubit_col):
         # Apply Hadamard correction to the qubit at (row, col)
         hadamard_correction_matrix = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
-        self.logical_qubits[row, col] = np.dot(hadamard_correction_matrix, self.logical_qubits[row, col])
-
-
-    def _apply_cphase_correction(self, row, col):
+        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
+            hadamard_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+        )
+    
+    # Inside _apply_cphase_correction function
+    def _apply_cphase_correction(self, row, col, qubit_row, qubit_col):
         # Apply CPHASE correction to the qubit at (row, col)
         cphase_correction_matrix = expm(-1j * np.pi / 2 * np.array([[1, 0], [0, 0]]))
-        self.logical_qubits[row, col] = np.dot(cphase_correction_matrix, self.logical_qubits[row, col])
+        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
+            cphase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+        )
     
-    def _apply_phase_correction(self, row, col):
+    # Inside _apply_phase_correction function
+    def _apply_phase_correction(self, row, col, qubit_row, qubit_col):
         # Apply phase correction to the qubit at (row, col)
         phase_correction_angle = np.pi / 4  # Adjust the angle as needed
         phase_correction_matrix = expm(-1j * phase_correction_angle * np.array([[1, 0], [0, 0]]))
-        self.logical_qubits[row, col] = np.dot(phase_correction_matrix, self.logical_qubits[row, col])
+        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
+            phase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+        )
+
+
     
-    def measure(self, target_qubit):
-        # Measure the state of a specific qubit
-        # Returns a 1x4 array representing eigenstates |00⟩, |01⟩, |10⟩, |11⟩
-        probabilities = np.abs(self.logical_qubits[target_qubit[0], target_qubit[1]]).flatten()**2
-        
-        # Normalize probabilities to ensure they sum to 1
-        probabilities /= probabilities.sum()
-        # Binary representations of eigenstates
-        eigenstate_choices = [0b00, 0b01, 0b10, 0b11]
-        outcomes = np.random.choice(eigenstate_choices, p=probabilities, size=1)
-        return outcomes
+# Inside measure function
+def measure(self, target_qubit):
+    # Measure the state of a specific qubit
+    # Returns a 1x4 array representing eigenstates |00⟩, |01⟩, |10⟩, |11⟩
+    logical_qubit_row, logical_qubit_col = target_qubit[:2]
+    qubit_row, qubit_col = target_qubit[2:]
+
+    # Get the probabilities of the individual qubit within the logical qubit
+    probabilities = np.abs(self.logical_qubits[logical_qubit_row, logical_qubit_col, qubit_row, qubit_col]).flatten() ** 2
+
+    # Normalize probabilities to ensure they sum to 1
+    probabilities /= probabilities.sum()
+    
+    # Binary representations of eigenstates
+    eigenstate_choices = [0, 1]
+    outcomes = np.random.choice(eigenstate_choices, p=probabilities, size=1)
+    return outcomes
+
     
     def get_state_vector(self):
         # Get the state vector of the logical qubits
