@@ -288,11 +288,16 @@ class SurfaceCodeQubit:
     
     def measure(self, target_qubit):
         # Measure the state of a specific qubit
-        # Returns 0 or 1 based on the measurement result
-        probabilities = np.abs(self.logical_qubits[target_qubit[0], target_qubit[1]])**2
-        result = np.random.choice([0, 1], p=probabilities)
-        return result
-
+        # Returns a 1x4 array representing eigenstates |00⟩, |01⟩, |10⟩, |11⟩
+        probabilities = np.abs(self.logical_qubits[target_qubit[0], target_qubit[1]]).flatten()**2
+        
+        # Normalize probabilities to ensure they sum to 1
+        probabilities /= probabilities.sum()
+        # Binary representations of eigenstates
+        eigenstate_choices = [0b00, 0b01, 0b10, 0b11]
+        outcomes = np.random.choice(eigenstate_choices, p=probabilities, size=1)
+        return outcomes
+    
     def get_state_vector(self):
         # Get the state vector of the logical qubits
         state_vector = self.logical_qubits.flatten()
