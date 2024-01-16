@@ -272,16 +272,19 @@ class SurfaceCodeQubit:
         else:
             return None
 
-    # Inside _apply_correction_to_all_qubits function
-    def _apply_correction_to_all_qubits(self, syndromes):
-        # Iterate through every logical qubit
+    def _correct_error(self, syndromes):
+        # Correct errors for each logical qubit based on syndromes
         for row in range(self.size):
             for col in range(self.size):
-                # Iterate through every qubit within the logical qubit
-                for qubit_row in range(self.logical_qubits.shape[2]):
-                    for qubit_col in range(self.logical_qubits.shape[3]):
-                        # Execute _apply_correction for each qubit
-                        self._apply_correction(row, col, qubit_row, qubit_col, syndromes)
+                self._correct_logical_qubit(row, col, syndromes)
+    
+    def _correct_logical_qubit(self, row, col, syndromes):
+        # Apply correction strategy for a specific logical qubit
+        logical_qubit_qubits = self.logical_qubits[row, col, :, :]
+    
+        for qubit_row in range(logical_qubit_qubits.shape[0]):
+            for qubit_col in range(logical_qubit_qubits.shape[1]):
+                self._apply_correction(row, col, qubit_row, qubit_col, syndromes)
     
     # Inside _apply_correction function
     def _apply_correction(self, row, col, qubit_row, qubit_col, syndromes):
@@ -298,32 +301,32 @@ class SurfaceCodeQubit:
     def _apply_x_correction(self, row, col, qubit_row, qubit_col):
         # Apply X correction to the qubit at (row, col)
         gate_matrix = np.array([[0, 1], [1, 0]])
-        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
+        self.logical_qubits[row, col, :, :] = np.dot(
+            gate_matrix, self.logical_qubits[row, col, :, :]
         )
     
     # Inside _apply_z_correction function
     def _apply_z_correction(self, row, col, qubit_row, qubit_col):
         # Apply Z correction to the qubit at (row, col)
         gate_matrix = np.array([[1, 0], [0, -1]])
-        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
+        self.logical_qubits[row, col, :, :] = np.dot(
+            gate_matrix, self.logical_qubits[row, col, :, :]
         )
     
     # Inside _apply_hadamard_correction function
     def _apply_hadamard_correction(self, row, col, qubit_row, qubit_col):
         # Apply Hadamard correction to the qubit at (row, col)
         hadamard_correction_matrix = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
-        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            hadamard_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
+        self.logical_qubits[row, col, :, :] = np.dot(
+            hadamard_correction_matrix, self.logical_qubits[row, col, :, :]
         )
     
     # Inside _apply_cphase_correction function
     def _apply_cphase_correction(self, row, col, qubit_row, qubit_col):
         # Apply CPHASE correction to the qubit at (row, col)
         cphase_correction_matrix = expm(-1j * np.pi / 2 * np.array([[1, 0], [0, 0]]))
-        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            cphase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
+        self.logical_qubits[row, col, :, :] = np.dot(
+            cphase_correction_matrix, self.logical_qubits[row, col, :, :]
         )
     
     # Inside _apply_phase_correction function
@@ -331,8 +334,8 @@ class SurfaceCodeQubit:
         # Apply phase correction to the qubit at (row, col)
         phase_correction_angle = np.pi / 4  # Adjust the angle as needed
         phase_correction_matrix = expm(-1j * phase_correction_angle * np.array([[1, 0], [0, 0]]))
-        self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            phase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
+        self.logical_qubits[row, col, :, :] = np.dot(
+            phase_correction_matrix, self.logical_qubits[row, col, :, :]
         )
 
 
