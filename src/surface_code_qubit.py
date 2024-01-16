@@ -6,7 +6,7 @@ class SurfaceCodeQubit:
     def __init__(self, size):
         self.size = size
         self.graph = nx.grid_2d_graph(size, size)
-        self.logical_qubits = np.zeros((size, size), dtype=complex)
+        self.logical_qubits = np.full((size, size), 1e-10j, dtype=complex)
 
     def apply_gate(self, gate_type, target_qubits):
         # Apply a gate to the qubits based on gate type
