@@ -258,7 +258,22 @@ class SurfaceCodeQubit:
                     return 'Phase'
             else:
                 return None
-            
+
+    def _detect_cphase_error_type(self, syndromes, row, col):
+        # Implement logic to analyze CPHASE syndromes and determine error type
+        # Return the identified error type (e.g., 'CPHASE', ...)
+        if syndromes[row, col] == 1:
+            # Check additional conditions to identify the error type
+            cphase_stabilizer_value = self._compute_cphase_stabilizer_value(row, col)
+
+            # Determine error type based on stabilizer values
+            if cphase_stabilizer_value == 1:
+                return 'CPHASE'
+            else:
+                return 'NoError'
+        else:
+            return None
+    
     def _apply_x_correction(self, row, col):
         # Apply X correction to the qubit at (row, col)
         gate_matrix = np.array([[0, 1], [1, 0]])
