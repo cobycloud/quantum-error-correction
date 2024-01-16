@@ -96,7 +96,7 @@ The `example_usage.ipynb` notebook provides a detailed example of how to use the
 License
 -------
 
-This project is licensed under the `MIT License <https://opensource.org/licenses/MIT>`_ - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the `MIT License <https://opensource.org/licenses/MIT>`
 
 Contribution
 ------------
