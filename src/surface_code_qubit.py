@@ -24,10 +24,15 @@ class SurfaceCodeQubit:
         for qubit in target_qubits:
             row, col = qubit
             operand = self.logical_qubits[row, col]
-            if np.isscalar(operand):
+            
+            if np.iscomplex(operand) and np.abs(operand) == 0:
+                # Operand is a complex number with zero magnitude
+                operand = np.array([0j], dtype=complex)
+            elif np.isscalar(operand):
                 operand = np.array([operand], dtype=complex)
             elif operand.ndim == 1:
                 operand = operand.reshape((-1, 1))
+                
             self.logical_qubits[row, col] = gate_matrix @ operand
 
     def _apply_z_gate(self, target_qubits):
