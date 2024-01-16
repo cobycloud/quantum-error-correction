@@ -1,5 +1,5 @@
 # Quantum Operation Examples
-- Not all examples featured here are actually supported by the code at this time.
+- Not all examples featured here have been validated.
 
 ## Simple Quantum Circuit:
 
