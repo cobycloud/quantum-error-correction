@@ -17,35 +17,19 @@ class SurfaceCodeQubit:
         elif gate_type == 'CNOT':
             self._apply_cnot_gate(target_qubits)
         # Add more gate types as needed
-
+    
     def _apply_x_gate(self, target_qubits):
         # Apply X gate to the target qubits
-        gate_matrix = np.array([[0, 1], [1, 0]])
-        for qubit in target_qubits:
-            row, col = qubit
-            operand = self.logical_qubits[row, col]
-            
-            if np.iscomplex(operand) and np.abs(operand) == 0:
-                # Operand is a complex number with zero magnitude
-                operand = np.array([0j], dtype=complex)
-            elif np.isscalar(operand):
-                operand = np.array([operand], dtype=complex)
-            elif operand.ndim == 1:
-                operand = operand.reshape((-1, 1))
-                
-            self.logical_qubits[row, col] = gate_matrix @ operand
+        target_row, target_col = target_qubits
+        x_gate_matrix = np.array([[0, 1], [1, 0]])
+        self.logical_qubits[target_row, target_col] = np.dot(x_gate_matrix, self.logical_qubits[target_row, target_col])
 
     def _apply_z_gate(self, target_qubits):
         # Apply Z gate to the target qubits
-        gate_matrix = np.array([[1, 0], [0, -1]])
-        for qubit in target_qubits:
-            row, col = qubit
-            operand = self.logical_qubits[row, col]
-            if np.isscalar(operand):
-                operand = np.array([operand], dtype=complex)
-            elif operand.ndim == 1:
-                operand = operand.reshape((-1, 1))
-            self.logical_qubits[row, col] = gate_matrix @ operand
+        target_row, target_col = target_qubits
+        z_gate_matrix = np.array([[1, 0], [0, -1]])
+        self.logical_qubits[target_row, target_col] = np.dot(z_gate_matrix, self.logical_qubits[target_row, target_col])
+
             
     def _apply_cnot_gate(self, target_qubits):
         # Apply CNOT gate to the target qubits
@@ -117,3 +101,7 @@ class SurfaceCodeQubit:
         # Get the state vector of the logical qubits
         state_vector = self.logical_qubits.flatten()
         return state_vector
+
+# Example usage:
+size = 3  # Set your desired size
+surface_code_qubit = SurfaceCodeQubit(size)
