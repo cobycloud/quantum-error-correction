@@ -338,25 +338,24 @@ class SurfaceCodeQubit:
             phase_correction_matrix, self.logical_qubits[row, col, :, :]
         )
 
-
     
-# Inside measure function
-def measure(self, target_qubit):
-    # Measure the state of a specific qubit
-    # Returns a 1x4 array representing eigenstates |00⟩, |01⟩, |10⟩, |11⟩
-    logical_qubit_row, logical_qubit_col = target_qubit[:2]
-    qubit_row, qubit_col = target_qubit[2:]
-
-    # Get the probabilities of the individual qubit within the logical qubit
-    probabilities = np.abs(self.logical_qubits[logical_qubit_row, logical_qubit_col, qubit_row, qubit_col]).flatten() ** 2
-
-    # Normalize probabilities to ensure they sum to 1
-    probabilities /= probabilities.sum()
+    # Inside measure function
+    def measure(self, target_qubit):
+        # Measure the state of a specific qubit
+        # Returns a 1x4 array representing eigenstates |00⟩, |01⟩, |10⟩, |11⟩
+        logical_qubit_row, logical_qubit_col = target_qubit[:2]
+        qubit_row, qubit_col = target_qubit[2:]
     
-    # Binary representations of eigenstates
-    eigenstate_choices = [0, 1]
-    outcomes = np.random.choice(eigenstate_choices, p=probabilities, size=1)
-    return outcomes
+        # Get the probabilities of the individual qubit within the logical qubit
+        probabilities = np.abs(self.logical_qubits[logical_qubit_row, logical_qubit_col, qubit_row, qubit_col]).flatten() ** 2
+    
+        # Normalize probabilities to ensure they sum to 1
+        probabilities /= probabilities.sum()
+        
+        # Binary representations of eigenstates
+        eigenstate_choices = [0, 1]
+        outcomes = np.random.choice(eigenstate_choices, p=probabilities, size=1)
+        return outcomes
 
     
     def get_state_vector(self):
