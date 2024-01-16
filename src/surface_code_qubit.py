@@ -18,7 +18,7 @@ class SurfaceCodeQubit:
             self._apply_cnot_gate(target_qubits)
         # Add more gate types as needed
 
-     def _apply_x_gate(self, target_qubits):
+    def _apply_x_gate(self, target_qubits):
         # Apply X gate to the target qubits
         gate_matrix = np.array([[0, 1], [1, 0]])
         for qubit in target_qubits:
