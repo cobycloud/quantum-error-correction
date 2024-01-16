@@ -1,7 +1,7 @@
 SurfaceCodeQubit
 ================
 
-The `SurfaceCodeQubit` class represents a logical qubit in a surface code quantum error correction scheme. It supports various gate operations, error correction, and measurement functionalities.
+✨ The `SurfaceCodeQubit` class represents a logical qubit in a surface code quantum error correction scheme. It supports various gate operations, error correction, and measurement functionalities.
 
 Initialization
 --------------
@@ -14,7 +14,7 @@ Initialization
 
 The logical qubits are initialized with small complex values to avoid issues during gate operations.
 
-Gate Operations
+🔧 Quantum Gate Operations
 ---------------
 
 X Gate
@@ -46,7 +46,7 @@ Applies a Controlled-NOT (CNOT) gate to the specified target qubits.
 
 Add more gate types as needed.
 
-Measurement and Error Correction
+🛠️ Measurement and Error Correction
 ---------------------------------
 
 Measure Stabilizers
@@ -67,8 +67,6 @@ Correct Errors
 
 Enhanced error correction based on detected syndromes.
 
-Measurement
-------------
 
 Measure Qubit State
 ^^^^^^^^^^^^^^^^^^
@@ -79,6 +77,9 @@ Measure Qubit State
 
 Measures the state of a specific qubit and returns the measurement result (0 or 1).
 
+📊 State Retrieval
+------------
+
 Get State Vector
 ^^^^^^^^^^^^^^^^
 
@@ -88,12 +89,12 @@ Get State Vector
 
 Gets the state vector of the logical qubits.
 
-Example Usage and Notebooks
+🌐 Example Usage and Notebooks
 ---------------------------
 
 The `example_usage.ipynb` notebook provides a detailed example of how to use the `SurfaceCodeQubit` class. It covers various operations, measurements, and error correction procedures. Check the notebook for a step-by-step guide on working with the class.
 
-License
+⚖️ License
 -------
 
 This project is licensed under the `MIT License <https://opensource.org/licenses/MIT>`_
