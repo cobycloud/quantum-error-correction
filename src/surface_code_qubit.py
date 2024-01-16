@@ -234,30 +234,30 @@ class SurfaceCodeQubit:
 
 
     def _detect_error_type(self, syndromes, row, col):
-    # Implement logic to analyze syndromes and determine error type
-    # Return the identified error type (e.g., 'X', 'Z', 'H', 'CPHASE', 'Phase', ...)
-    cphase_error_type = self._detect_cphase_error_type(syndromes, row, col)
-    if cphase_error_type == 'CPHASE':
-        return 'CPHASE'
-    # Add more conditions for other error types
-    else:
-        # Implement logic for other error types (X, Z, H, Phase, etc.)
-        if syndromes[row, col] == 1:
-            # Check additional conditions to identify the error type
-            x_stabilizer_value = self._compute_rx_stabilizer_value(row, col)
-            z_stabilizer_value = self._compute_rz_stabilizer_value(row, col)
-
-            # Determine error type based on stabilizer values
-            if x_stabilizer_value == 1 and z_stabilizer_value == -1:
-                return 'X'
-            elif x_stabilizer_value == -1 and z_stabilizer_value == 1:
-                return 'Z'
-            elif x_stabilizer_value == 1 and z_stabilizer_value == 1:
-                return 'H'
-            else:
-                return 'Phase'
+        # Implement logic to analyze syndromes and determine error type
+        # Return the identified error type (e.g., 'X', 'Z', 'H', 'CPHASE', 'Phase', ...)
+        cphase_error_type = self._detect_cphase_error_type(syndromes, row, col)
+        if cphase_error_type == 'CPHASE':
+            return 'CPHASE'
+        # Add more conditions for other error types
         else:
-            return None
+            # Implement logic for other error types (X, Z, H, Phase, etc.)
+            if syndromes[row, col] == 1:
+                # Check additional conditions to identify the error type
+                x_stabilizer_value = self._compute_rx_stabilizer_value(row, col)
+                z_stabilizer_value = self._compute_rz_stabilizer_value(row, col)
+    
+                # Determine error type based on stabilizer values
+                if x_stabilizer_value == 1 and z_stabilizer_value == -1:
+                    return 'X'
+                elif x_stabilizer_value == -1 and z_stabilizer_value == 1:
+                    return 'Z'
+                elif x_stabilizer_value == 1 and z_stabilizer_value == 1:
+                    return 'H'
+                else:
+                    return 'Phase'
+            else:
+                return None
             
     def _apply_x_correction(self, row, col):
         # Apply X correction to the qubit at (row, col)
