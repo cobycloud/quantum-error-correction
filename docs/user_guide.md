@@ -71,5 +71,5 @@ state_vector = surface_code_qubit.get_state_vector()
 ### Example Usage
 See the provided example_usage.ipynb notebook for a detailed example of library usage.
 
-Conclusion
+### Conclusion
 The Quantum Error Correction Library offers a convenient way to explore quantum error correction using the surface code. Experiment with different gate operations, error correction techniques, and analyze simulation outcomes.
