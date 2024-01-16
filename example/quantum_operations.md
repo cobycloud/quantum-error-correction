@@ -1,7 +1,7 @@
 # Quantum Operation Examples
 - Not all examples featured here have been validated.
-
-## Simple Quantum Circuit:
+---
+### Simple Quantum Circuit
 
 #### Operations:
 1. Apply Hadamard gate (H) to a qubit.
@@ -19,7 +19,8 @@ surface_code_qubit.apply_gate('H', [(0, 0)])
 surface_code_qubit.apply_gate('CNOT', [(0, 0), (0, 1)])
 surface_code_qubit.measure([(0, 0), (0, 1)])
 ```
-## Entanglement Creation:
+---
+### Entanglement Creation
 
 #### Operations:
 1. Apply Hadamard gate to the first qubit.
@@ -36,7 +37,10 @@ surface_code_qubit.apply_gate('H', [(0, 0)])
 surface_code_qubit.apply_gate('CNOT', [(0, 0), (0, 1)])
 surface_code_qubit.measure([(0, 0), (0, 1)])
 ```
-## Quantum Fourier Transform:
+
+---
+
+### Quantum Fourier Transform
 
 #### Operations:
 1. Apply a series of Hadamard gates and controlled-phase (CPHASE) gates.
@@ -55,7 +59,9 @@ for qubit in range(size):
 surface_code_qubit.measure([(0, 0), (1, 0), (2, 0)])
 ```
 
-## Error Correction (Surface Code):
+---
+
+### Error Correction (Surface Code)
 
 #### Operations:
 1. Apply Hadamard and CNOT gates for syndrome extraction.
@@ -75,7 +81,10 @@ for _ in range(num_rounds):
     syndromes = surface_code_qubit.measure_stabilizers()
     surface_code_qubit._correct_error(syndromes)
 ```
-## Quantum Random Walk:
+
+---
+
+### Quantum Random Walk
 
 #### Operations:
 1. Apply a sequence of Hadamard, CPHASE, and single-qubit rotation gates.
