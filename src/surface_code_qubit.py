@@ -297,7 +297,3 @@ class SurfaceCodeQubit:
         # Get the state vector of the logical qubits
         state_vector = self.logical_qubits.flatten()
         return state_vector
-
-# Example usage:
-size = 3  # Set your desired size
-surface_code_qubit = SurfaceCodeQubit(size)
