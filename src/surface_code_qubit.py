@@ -24,7 +24,8 @@ class SurfaceCodeQubit:
             self._apply_ry_gate(target_qubits, angle)
         elif gate_type == 'RZ':
             self._apply_rz_gate(target_qubits, angle)
-        # Add more gate types as needed
+        elif gate_type == 'CPHASE':
+            self._apply_cphase_gate(target_qubits, angle)
 
     def _apply_x_gate(self, target_qubits):
         # Apply X gate to the target qubits
@@ -70,7 +71,31 @@ class SurfaceCodeQubit:
         target_row, target_col = target_qubits
         rz_gate_matrix = expm(-1j * angle / 2 * np.array([[1, 0], [0, -1]]))
         self.logical_qubits[target_row, target_col] = np.dot(rz_gate_matrix, self.logical_qubits[target_row, target_col])
+        
+    def _apply_cphase_gate(self, target_qubits, angle):
+        # Apply CPHASE gate to the target qubits
+        control_qubit, target_qubit = target_qubits
+        control_row, control_col = control_qubit
+        target_row, target_col = target_qubit
+        cphase_matrix = expm(-1j * angle / 2 * np.array([[1, 0], [0, -1]]))
+        self.logical_qubits[control_row, control_col] = np.dot(cphase_matrix, self.logical_qubits[control_row, control_col])
 
+    def measure_cphase_stabilizers(self):
+        # Measure CPHASE stabilizers and return the syndromes
+        syndromes = np.zeros((self.size, self.size), dtype=int)
+        for node in self.graph.nodes:
+            row, col = node
+            stabilizer_value = self._compute_cphase_stabilizer_value(row, col)
+            error = self._measure_stabilizer(stabilizer_value)
+            syndromes[row, col] = error
+
+        return syndromes
+
+    def _compute_cphase_stabilizer_value(self, row, col):
+        # Compute CPHASE stabilizer value for a given qubit
+        neighbors = list(self.graph.neighbors((row, col)))
+        stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
+        return stabilizer_value
     
     def measure_rx_stabilizers(self):
         # Measure RX stabilizers and return the syndromes
@@ -171,6 +196,7 @@ class SurfaceCodeQubit:
             self._apply_correction(row, col, syndromes)
 
 
+
     
     def _apply_correction(self, row, col, syndromes):
         # Apply a correction strategy based on detected syndromes
@@ -181,6 +207,8 @@ class SurfaceCodeQubit:
             self._apply_z_correction(row, col)
         elif error_type == 'H':
             self._apply_hadamard_correction(row, col)
+        elif error_type == 'CPHASE':
+            self._apply_cphase_correction(row, col)
         elif error_type == 'Phase':
             self._apply_phase_correction(row, col)
 
@@ -203,7 +231,34 @@ class SurfaceCodeQubit:
                 return 'Phase'
         else:
             return None
-    
+
+
+    def _detect_error_type(self, syndromes, row, col):
+    # Implement logic to analyze syndromes and determine error type
+    # Return the identified error type (e.g., 'X', 'Z', 'H', 'CPHASE', 'Phase', ...)
+    cphase_error_type = self._detect_cphase_error_type(syndromes, row, col)
+    if cphase_error_type == 'CPHASE':
+        return 'CPHASE'
+    # Add more conditions for other error types
+    else:
+        # Implement logic for other error types (X, Z, H, Phase, etc.)
+        if syndromes[row, col] == 1:
+            # Check additional conditions to identify the error type
+            x_stabilizer_value = self._compute_rx_stabilizer_value(row, col)
+            z_stabilizer_value = self._compute_rz_stabilizer_value(row, col)
+
+            # Determine error type based on stabilizer values
+            if x_stabilizer_value == 1 and z_stabilizer_value == -1:
+                return 'X'
+            elif x_stabilizer_value == -1 and z_stabilizer_value == 1:
+                return 'Z'
+            elif x_stabilizer_value == 1 and z_stabilizer_value == 1:
+                return 'H'
+            else:
+                return 'Phase'
+        else:
+            return None
+            
     def _apply_x_correction(self, row, col):
         # Apply X correction to the qubit at (row, col)
         gate_matrix = np.array([[0, 1], [1, 0]])
@@ -219,6 +274,11 @@ class SurfaceCodeQubit:
         hadamard_correction_matrix = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
         self.logical_qubits[row, col] = np.dot(hadamard_correction_matrix, self.logical_qubits[row, col])
 
+
+    def _apply_cphase_correction(self, row, col):
+        # Apply CPHASE correction to the qubit at (row, col)
+        cphase_correction_matrix = expm(-1j * np.pi / 2 * np.array([[1, 0], [0, 0]]))
+        self.logical_qubits[row, col] = np.dot(cphase_correction_matrix, self.logical_qubits[row, col])
     
     def _apply_phase_correction(self, row, col):
         # Apply phase correction to the qubit at (row, col)
