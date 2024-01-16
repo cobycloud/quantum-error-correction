@@ -23,15 +23,21 @@ class SurfaceCodeQubit:
         gate_matrix = np.array([[0, 1], [1, 0]])
         for qubit in target_qubits:
             row, col = qubit
-            self.logical_qubits[row, col] = gate_matrix @ self.logical_qubits[(row, col)]
+            operand = self.logical_qubits[(row, col)]
+            if np.isscalar(operand):
+                operand = np.array([operand])
+            self.logical_qubits[row, col] = np.matmul(gate_matrix, operand)
 
     def _apply_z_gate(self, target_qubits):
         # Apply Z gate to the target qubits
         gate_matrix = np.array([[1, 0], [0, -1]])
         for qubit in target_qubits:
             row, col = qubit
-            self.logical_qubits[row, col] = gate_matrix @ self.logical_qubits[(row, col)]
-
+            operand = self.logical_qubits[(row, col)]
+            if np.isscalar(operand):
+                operand = np.array([operand])
+            self.logical_qubits[row, col] = np.matmul(gate_matrix, operand)
+            
     def _apply_cnot_gate(self, target_qubits):
         # Apply CNOT gate to the target qubits
         control_qubit, target_qubit = target_qubits
