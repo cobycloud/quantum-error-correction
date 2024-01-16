@@ -10,6 +10,30 @@ class SurfaceCodeQubit:
                                       [[[1e-10j, 1e-10j], [1e-10j, 1e-10j]], 
                                        [[1e-10j, 1e-10j], [1e-10j, 1e-10j]]], dtype=complex)
 
+    def load_bit_string(self, bit_string):
+        # Iterate through the logical qubits and store each bit in the next qubit
+        current_bit_index = 0
+        for logical_qubit_row in range(self.size):
+            for logical_qubit_col in range(self.size):
+                for qubit_row in range(self.logical_qubits.shape[2]):
+                    for qubit_col in range(self.logical_qubits.shape[3]):
+                        # Check if there are still bits in the bit string
+                        if current_bit_index < len(bit_string):
+                            # Set the qubit value based on the bit in the bit string
+                            bit_value = int(bit_string[current_bit_index])
+                            self.logical_qubits[logical_qubit_row, logical_qubit_col, qubit_row, qubit_col, 0] = bit_value
+                            current_bit_index += 1
+                        else:
+                            # If the bit string is exhausted, break out of the loop
+                            break
+                    else:
+                        continue
+                    break
+                else:
+                    continue
+                break
+
+    
     def apply_gate(self, gate_type, target_qubits, angle=None):
         # Apply a gate to the qubits based on gate type
         if len(target_qubits) == 2:  # Two-qubit gate
@@ -19,8 +43,8 @@ class SurfaceCodeQubit:
 
     def _apply_single_qubit_gate(self, gate_type, target_qubit, angle=None):
         # Apply a single qubit gate to the target qubit
-        row, col, _, _, qubit_index = target_qubit
-        target_qubit_state = self.logical_qubits[row, col, :, :, qubit_index]
+        row, col, qubit_row, qubit_col = target_qubit
+        target_qubit_state = self.logical_qubits[row, col, qubit_row, qubit_col]
 
         if gate_type == 'X':
             self._apply_x_gate(target_qubit_state)
@@ -38,15 +62,15 @@ class SurfaceCodeQubit:
             self._apply_cphase_gate(target_qubit_state, angle)
 
         # Update the state of the target qubit
-        self.logical_qubits[row, col, :, :, qubit_index] = target_qubit_state
+        self.logical_qubits[row, col, qubit_row, qubit_col] = target_qubit_state
 
     def _apply_two_qubit_gate(self, gate_type, target_qubits, angle=None):
         # Apply a two-qubit gate to the target qubits
-        control_row, control_col, _, _, control_index = target_qubits[0]
-        target_row, target_col, _, _, target_index = target_qubits[1]
+        control_row, control_col, control_qubit_row, control_qubit_row = target_qubits[0]
+        target_row, target_col, target_qubit_row, target_qubit_row = target_qubits[1]
 
-        control_qubit_state = self.logical_qubits[control_row, control_col, :, :, control_index]
-        target_qubit_state = self.logical_qubits[target_row, target_col, :, :, target_index]
+        control_qubit_state = self.logical_qubits[control_row, control_col, control_qubit_row, control_qubit_row]
+        target_qubit_state = self.logical_qubits[target_row, target_col, target_qubit_row, target_qubit_row]
 
         if gate_type == 'CNOT':
             self._apply_cnot_gate(control_qubit_state, target_qubit_state)
@@ -54,8 +78,8 @@ class SurfaceCodeQubit:
             self._apply_cphase_gate(control_qubit_state, target_qubit_state, angle)
 
         # Update the states of the target qubits
-        self.logical_qubits[control_row, control_col, :, :, control_index] = control_qubit_state
-        self.logical_qubits[target_row, target_col, :, :, target_index] = target_qubit_state
+        self.logical_qubits[control_row, control_col, control_qubit_row, control_qubit_row] = control_qubit_state
+        self.logical_qubits[target_row, target_col, target_qubit_row, target_qubit_row] = target_qubit_state
 
     def _apply_x_gate(self, target_qubit_state):
         # Apply X gate to the target qubit state
@@ -76,11 +100,17 @@ class SurfaceCodeQubit:
         # Apply CNOT gate to the target qubits
         cnot_matrix = np.zeros((4, 4), dtype=complex)
         cnot_matrix[0, 0] = cnot_matrix[1, 1] = cnot_matrix[2, 3] = cnot_matrix[3, 2] = 1
-
+    
+        # Apply CNOT gate to the control qubit state
         control_qubit_state = np.dot(cnot_matrix, control_qubit_state)
-        # Apply X gate to the target qubit state
-        x_gate_matrix = np.array([[0, 1], [1, 0]])
-        target_qubit_state = np.dot(x_gate_matrix, target_qubit_state)
+    
+        # Apply X gate to the target qubit state if the control qubit is |1⟩
+        if control_qubit_state[1] != 0:
+            x_gate_matrix = np.array([[0, 1], [1, 0]])
+            target_qubit_state = np.dot(x_gate_matrix, target_qubit_state)
+            self.logical_qubits[control_row, control_col, control_qubit_row, control_qubit_row]
+    
+
 
     def _apply_cphase_gate(self, control_qubit_state, target_qubit_state, angle):
         # Apply CPHASE gate to the target qubits
@@ -111,13 +141,11 @@ class SurfaceCodeQubit:
         stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
         return stabilizer_value
 
-
     def _compute_stabilizer_value(self, row, col):
         # Compute stabilizer value for a given qubit
         neighbors = list(self.graph.neighbors((row, col)))
         stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
         return stabilizer_value
-
 
     def _compute_cphase_stabilizer_value(self, row, col):
         # Compute CPHASE stabilizer value for a given qubit
@@ -125,6 +153,18 @@ class SurfaceCodeQubit:
         stabilizer_value = np.prod([self.logical_qubits[n[0], n[1]] for n in neighbors])
         return stabilizer_value
 
+    def measure_stabilizers(self):
+        # Measure stabilizers and return the syndromes
+        syndromes = np.zeros((self.size, self.size), dtype=int)
+    
+        for row in range(self.size):
+            for col in range(self.size):
+                stabilizer_value = self._compute_stabilizer_value(row, col)
+                error = self._measure_stabilizer(stabilizer_value)
+                syndromes[row, col] = error
+    
+        return syndromes
+    
     # Inside measure_cphase_stabilizers function
     def measure_cphase_stabilizers(self):
         # Measure CPHASE stabilizers and return the syndromes
@@ -259,7 +299,7 @@ class SurfaceCodeQubit:
         # Apply X correction to the qubit at (row, col)
         gate_matrix = np.array([[0, 1], [1, 0]])
         self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
         )
     
     # Inside _apply_z_correction function
@@ -267,7 +307,7 @@ class SurfaceCodeQubit:
         # Apply Z correction to the qubit at (row, col)
         gate_matrix = np.array([[1, 0], [0, -1]])
         self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+            gate_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
         )
     
     # Inside _apply_hadamard_correction function
@@ -275,7 +315,7 @@ class SurfaceCodeQubit:
         # Apply Hadamard correction to the qubit at (row, col)
         hadamard_correction_matrix = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
         self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            hadamard_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+            hadamard_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
         )
     
     # Inside _apply_cphase_correction function
@@ -283,7 +323,7 @@ class SurfaceCodeQubit:
         # Apply CPHASE correction to the qubit at (row, col)
         cphase_correction_matrix = expm(-1j * np.pi / 2 * np.array([[1, 0], [0, 0]]))
         self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            cphase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+            cphase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
         )
     
     # Inside _apply_phase_correction function
@@ -292,7 +332,7 @@ class SurfaceCodeQubit:
         phase_correction_angle = np.pi / 4  # Adjust the angle as needed
         phase_correction_matrix = expm(-1j * phase_correction_angle * np.array([[1, 0], [0, 0]]))
         self.logical_qubits[row, col, qubit_row, qubit_col, 0] = np.dot(
-            phase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col, 0]
+            phase_correction_matrix, self.logical_qubits[row, col, qubit_row, qubit_col]
         )
 
 
