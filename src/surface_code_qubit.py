@@ -18,7 +18,7 @@ class SurfaceCodeQubit:
             self._apply_cnot_gate(target_qubits)
         # Add more gate types as needed
 
-    def _apply_x_gate(self, target_qubits):
+     def _apply_x_gate(self, target_qubits):
         # Apply X gate to the target qubits
         gate_matrix = np.array([[0, 1], [1, 0]])
         for qubit in target_qubits:
@@ -26,7 +26,9 @@ class SurfaceCodeQubit:
             operand = self.logical_qubits[(row, col)]
             if np.isscalar(operand):
                 operand = np.array([operand])
-            self.logical_qubits[row, col] = np.matmul(gate_matrix, operand)
+            elif operand.ndim == 1:
+                operand = operand.reshape((1, -1))
+            self.logical_qubits[row, col] = np.matmul(operand, gate_matrix)
 
     def _apply_z_gate(self, target_qubits):
         # Apply Z gate to the target qubits
@@ -36,7 +38,9 @@ class SurfaceCodeQubit:
             operand = self.logical_qubits[(row, col)]
             if np.isscalar(operand):
                 operand = np.array([operand])
-            self.logical_qubits[row, col] = np.matmul(gate_matrix, operand)
+            elif operand.ndim == 1:
+                operand = operand.reshape((1, -1))
+            self.logical_qubits[row, col] = np.matmul(operand, gate_matrix)
             
     def _apply_cnot_gate(self, target_qubits):
         # Apply CNOT gate to the target qubits
