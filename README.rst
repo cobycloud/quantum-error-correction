@@ -96,11 +96,11 @@ The `example_usage.ipynb` notebook provides a detailed example of how to use the
 License
 -------
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the `MIT License <https://opensource.org/licenses/MIT>`_ - see the [LICENSE](LICENSE) file for details.
 
 Contribution
 ------------
 
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to contribute to this project.
+Contributions are welcome! Please submit a pull request to start contributing to this project.
 
 This README provides a comprehensive guide on using the `SurfaceCodeQubit` class, including licensing and contribution details. Feel free to customize and expand it based on your specific requirements.
