@@ -28,7 +28,7 @@ class SurfaceCodeQubit:
                 operand = np.array([operand])
             elif operand.ndim == 1:
                 operand = operand.reshape((1, -1))
-            self.logical_qubits[row, col] = np.matmul(operand, gate_matrix)
+            self.logical_qubits[row, col] = np.matmul(operand, gate_matrix.T)
 
     def _apply_z_gate(self, target_qubits):
         # Apply Z gate to the target qubits
@@ -40,7 +40,7 @@ class SurfaceCodeQubit:
                 operand = np.array([operand])
             elif operand.ndim == 1:
                 operand = operand.reshape((1, -1))
-            self.logical_qubits[row, col] = np.matmul(operand, gate_matrix)
+            self.logical_qubits[row, col] = np.matmul(operand, gate_matrix.T)
             
     def _apply_cnot_gate(self, target_qubits):
         # Apply CNOT gate to the target qubits
